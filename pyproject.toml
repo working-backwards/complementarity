@@ -1,0 +1,16 @@
+[project]
+name = "complementarity"
+version = "0.1.0"
+description = "Dual-perspective sync tool for design documents"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.25.0"]
+openai = ["openai>=1.0.0"]
+
+[project.scripts]
+complementarity = "complementarity:main"

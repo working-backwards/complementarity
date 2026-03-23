@@ -7,10 +7,16 @@ Neither perspective is primary. Like wave-particle duality, every output is simu
 ## Install
 
 ```bash
-pip install pyyaml python-dotenv
+pip install git+https://github.com/working-backwards/complementarity.git
 ```
 
-Requires Python 3.10+ and the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude`), which uses your existing Max/Pro subscription — no API key needed.
+This gives you a `complementarity` command you can run from anywhere. Requires Python 3.10+ and the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude`), which uses your existing Max/Pro subscription — no API key needed.
+
+To upgrade:
+
+```bash
+pip install --upgrade git+https://github.com/working-backwards/complementarity.git
+```
 
 If you want to use direct API calls instead (`--provider anthropic` or `--provider openai`), also install the relevant SDK:
 
@@ -105,7 +111,7 @@ Attention details...
 ### Sync an entire document (bootstrapping)
 
 ```bash
-python complementarity.py sync docs/design/governance.md \
+complementarity sync docs/design/governance.md \
   --from Academic --to Business \
   --config /path/to/complementarity.yaml
 ```
@@ -115,7 +121,7 @@ Generates `### Business` content for every `##` section in the doc.
 ### Sync a single section (daily workflow)
 
 ```bash
-python complementarity.py sync docs/design/governance.md \
+complementarity sync docs/design/governance.md \
   --section "Stop logic" --from Academic --to Business \
   --config /path/to/complementarity.yaml
 ```
@@ -125,7 +131,7 @@ Faster, cheaper, and keeps attention on the section you're working on. This is t
 ### Inspect the prompt before calling the API
 
 ```bash
-python complementarity.py sync docs/design/governance.md \
+complementarity sync docs/design/governance.md \
   --from Academic --to Business --dry-run \
   --config /path/to/complementarity.yaml
 ```
@@ -136,13 +142,13 @@ Prints the fully assembled prompt to stdout. No API call, no file writes.
 
 ```bash
 # Use direct Anthropic API instead of Claude Code CLI
-python complementarity.py sync docs/design/governance.md \
+complementarity sync docs/design/governance.md \
   --from Academic --to Business \
   --provider anthropic --model claude-sonnet-4-20250514 \
   --config /path/to/complementarity.yaml
 
 # Use OpenAI
-python complementarity.py sync docs/design/governance.md \
+complementarity sync docs/design/governance.md \
   --from Academic --to Business \
   --provider openai --model gpt-4o \
   --config /path/to/complementarity.yaml
