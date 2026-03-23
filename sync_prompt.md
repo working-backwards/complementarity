@@ -72,12 +72,20 @@ how concepts are described elsewhere. Do not translate these.
 
 ```
 Here is the document organized by section. For each section, you are
-given the {{from.label}} content.
+given the {{from.label}} source content. Some sections also include
+existing {{to.label}} content that may contain original material.
 
 ## Section: [heading text]
+
+### Source ({{from.label}}):
 [source content for this section]
 
+### Existing target ({{to.label}}):
+[existing target content, if any]
+
 ## Section: [heading text]
+
+### Source ({{from.label}}):
 [source content for this section]
 
 ...
@@ -105,10 +113,31 @@ Produce the {{to.label}} version for each section following these rules:
    to appear in the {{from.label}} version, it is important enough to
    appear fully in the {{to.label}} version.
 
-6. If both perspectives already exist and they factually disagree on
-   a specific claim (e.g., number of inputs, direction of an effect),
-   flag the disagreement:
-   <!-- inconsistency: [what disagrees] -->
+6. PRESERVING EXISTING TARGET CONTENT: Some sections include existing
+   {{to.label}} content marked "Existing target." This content may
+   contain original material written directly in the {{to.label}}
+   register — not translated from {{from.label}}, but authored
+   independently. Handle it as follows:
+
+   a. Preserve the exact wording of existing target material. Do not
+      rephrase, reorganize, compress, or "improve" it. Treat it as
+      authored text that the writer chose deliberately.
+
+   b. Identify concepts in the {{from.label}} source that are NOT
+      already covered by the existing target content. Translate those
+      and add them in a natural position — before, after, or
+      interspersed with the existing material, wherever they fit best
+      in the section's flow.
+
+   c. If the existing target content already covers a concept from the
+      source, do not duplicate it. If the source covers a concept more
+      thoroughly than the existing target, add the uncovered aspects as
+      new content near the existing treatment — do not modify the
+      existing text.
+
+   d. If the existing target content contradicts the source on a
+      specific factual claim, preserve both and flag the disagreement:
+      <!-- inconsistency: [what disagrees] -->
 
 7. For sections where a {{to.label}} equivalent should exist but you
    are uncertain how to express it, include your best attempt and mark:

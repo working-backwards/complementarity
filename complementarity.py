@@ -282,15 +282,28 @@ def assemble_prompt(config: dict, sections: list[Section], cross_refs: list[str]
             parts.append(content)
 
     # Layer 5: Source content + instructions
-    parts.append(
-        f"\nHere is the document organized by section. For each section, you are "
-        f"given the {from_label} content."
-    )
+    has_existing = any(s.to_content for s in sections if s.from_content)
+
+    if has_existing:
+        parts.append(
+            f"\nHere is the document organized by section. For each section, you are "
+            f"given the {from_label} source content. Some sections also include "
+            f"existing {to_label} content that may contain original material."
+        )
+    else:
+        parts.append(
+            f"\nHere is the document organized by section. For each section, you are "
+            f"given the {from_label} content."
+        )
 
     for section in sections:
         if section.from_content:
             parts.append(f"\n## Section: {section.heading}")
+            parts.append(f"\n### Source ({from_label}):")
             parts.append(section.from_content)
+            if section.to_content:
+                parts.append(f"\n### Existing target ({to_label}):")
+                parts.append(section.to_content)
 
     parts.append(f"""
 Produce the {to_label} version for each section following these rules:
@@ -316,9 +329,30 @@ where they help the reader recognize the concept in their own experience.
 to appear in the {from_label} version, it is important enough to \
 appear fully in the {to_label} version.
 
-6. If both perspectives already exist and they factually disagree on \
-a specific claim (e.g., number of inputs, direction of an effect), \
-flag the disagreement:
+6. PRESERVING EXISTING TARGET CONTENT: Some sections include existing \
+{to_label} content marked "Existing target." This content may \
+contain original material written directly in the {to_label} \
+register — not translated from {from_label}, but authored \
+independently. Handle it as follows:
+
+   a. Preserve the exact wording of existing target material. Do not \
+rephrase, reorganize, compress, or "improve" it. Treat it as \
+authored text that the writer chose deliberately.
+
+   b. Identify concepts in the {from_label} source that are NOT \
+already covered by the existing target content. Translate those \
+and add them in a natural position — before, after, or \
+interspersed with the existing material, wherever they fit best \
+in the section's flow.
+
+   c. If the existing target content already covers a concept from the \
+source, do not duplicate it. If the source covers a concept more \
+thoroughly than the existing target, add the uncovered aspects as \
+new content near the existing treatment — do not modify the \
+existing text.
+
+   d. If the existing target content contradicts the source on a \
+specific factual claim, preserve both and flag the disagreement:
    <!-- inconsistency: [what disagrees] -->
 
 7. For sections where a {to_label} equivalent should exist but you \
@@ -425,12 +459,38 @@ def parse_response(response_text: str, source_headings: list[str]) -> list[dict]
     return generated
 
 
+def find_dropped_passages(old_content: str, new_content: str,
+                          min_length: int = 80) -> list[str]:
+    """Find passages from old_content that don't appear in new_content.
+
+    Splits old_content into paragraphs (blank-line delimited) and checks
+    whether each paragraph appears in new_content. Returns paragraphs
+    that are missing and at least min_length characters — short fragments
+    like headings or single-line items are not flagged.
+    """
+    if not old_content or not new_content:
+        return []
+
+    paragraphs = re.split(r"\n\s*\n", old_content.strip())
+    new_lower = new_content.lower()
+    dropped = []
+
+    for para in paragraphs:
+        para = para.strip()
+        if len(para) < min_length:
+            continue
+        if para.lower() not in new_lower:
+            dropped.append(para)
+
+    return dropped
+
+
 def write_updated_doc(original_path: str, sections: list[Section],
                       generated: list[dict], to_label: str) -> str:
     """Insert generated content into ### {to_label} subsections.
 
     Preserves all other content unchanged. Before writing, for each
-    section being overwritten, prints the current content and prompts
+    section being overwritten, checks for dropped passages and prompts
     for confirmation (y/n/all). Returns the updated document text.
     """
     original_text = Path(original_path).read_text()
@@ -446,14 +506,24 @@ def write_updated_doc(original_path: str, sections: list[Section],
         if section.heading not in gen_map:
             continue
         if section.to_content and not confirmed_all:
+            new_content = gen_map[section.heading]
+            dropped = find_dropped_passages(section.to_content, new_content)
+
             print(f"\n--- Section: {section.heading} ---")
-            print(f"Current ### {to_label} content that will be replaced:")
-            print(section.to_content[:500])
-            if len(section.to_content) > 500:
-                print(f"  ... ({len(section.to_content)} chars total)")
+            if dropped:
+                print(f"WARNING: {len(dropped)} passage(s) from existing "
+                      f"### {to_label} not found in generated output:")
+                for i, passage in enumerate(dropped, 1):
+                    preview = passage[:200]
+                    if len(passage) > 200:
+                        preview += "..."
+                    print(f"\n  [{i}] {preview}")
+                print()
+            else:
+                print(f"All existing ### {to_label} passages preserved.")
 
             while True:
-                response = input("\nOverwrite? (y/n/all): ").strip().lower()
+                response = input("Overwrite? (y/n/all): ").strip().lower()
                 if response in ("y", "n", "all"):
                     break
                 print("Please enter y, n, or all.")
