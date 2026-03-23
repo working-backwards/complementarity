@@ -80,7 +80,7 @@ def load_env(config_dir: str = ".") -> dict:
         load_dotenv(env_path)
 
     return {
-        "provider": os.getenv("DEFAULT_PROVIDER", "anthropic"),
+        "provider": os.getenv("DEFAULT_PROVIDER", "claude-code"),
         "model": os.getenv("DEFAULT_MODEL", "claude-sonnet-4-20250514"),
         "anthropic_api_key": os.getenv("ANTHROPIC_API_KEY"),
         "openai_api_key": os.getenv("OPENAI_API_KEY"),
@@ -339,10 +339,25 @@ section, using the exact section headings:
 
 
 def call_llm(prompt: str, provider: str, model: str, api_key: str, max_tokens: int) -> str:
-    """Dispatch to Anthropic or OpenAI. Return response text.
+    """Dispatch to Anthropic, OpenAI, or Claude Code CLI. Return response text.
     Raises on API error with clear message.
     """
-    if provider == "anthropic":
+    if provider == "claude-code":
+        import subprocess
+        cmd = ["claude", "-p", "--output-format", "text"]
+        if model:
+            cmd.extend(["--model", model])
+        result = subprocess.run(
+            cmd,
+            input=prompt,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            print(f"Error: claude CLI failed: {result.stderr}", file=sys.stderr)
+            sys.exit(1)
+        return result.stdout
+    elif provider == "anthropic":
         import anthropic
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
@@ -361,7 +376,8 @@ def call_llm(prompt: str, provider: str, model: str, api_key: str, max_tokens: i
         )
         return response.choices[0].message.content
     else:
-        print(f"Error: Unknown provider '{provider}'. Use 'anthropic' or 'openai'.",
+        print(f"Error: Unknown provider '{provider}'. "
+              f"Use 'claude-code', 'anthropic', or 'openai'.",
               file=sys.stderr)
         sys.exit(1)
 
@@ -517,7 +533,7 @@ def main():
     sync_parser.add_argument("--dry-run", action="store_true",
                              help="Print prompt without calling API")
     sync_parser.add_argument("--provider",
-                             help="LLM provider (anthropic or openai)")
+                             help="LLM provider (claude-code, anthropic, or openai)")
     sync_parser.add_argument("--model", help="Model identifier")
     sync_parser.add_argument("--config", default="complementarity.yaml",
                              help="Path to config file")
@@ -538,16 +554,19 @@ def main():
     provider = args.provider or env["provider"]
     model = args.model or env["model"]
 
-    # Get API key
+    # Get API key (not needed for claude-code provider)
+    api_key = None
     if provider == "anthropic":
         api_key = env["anthropic_api_key"]
     elif provider == "openai":
         api_key = env["openai_api_key"]
-    else:
-        print(f"Error: Unknown provider '{provider}'", file=sys.stderr)
+    elif provider != "claude-code":
+        print(f"Error: Unknown provider '{provider}'. "
+              f"Use 'claude-code', 'anthropic', or 'openai'.",
+              file=sys.stderr)
         sys.exit(1)
 
-    if not api_key and not args.dry_run:
+    if not api_key and provider != "claude-code" and not args.dry_run:
         print(f"Error: No API key found for {provider}. Set it in .env.",
               file=sys.stderr)
         sys.exit(1)

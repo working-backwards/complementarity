@@ -7,10 +7,17 @@ Neither perspective is primary. Like wave-particle duality, every output is simu
 ## Install
 
 ```bash
-pip install anthropic openai pyyaml python-dotenv
+pip install pyyaml python-dotenv
 ```
 
-Requires Python 3.10+.
+Requires Python 3.10+ and the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude`), which uses your existing Max/Pro subscription — no API key needed.
+
+If you want to use direct API calls instead (`--provider anthropic` or `--provider openai`), also install the relevant SDK:
+
+```bash
+pip install anthropic  # for --provider anthropic
+pip install openai     # for --provider openai
+```
 
 ## Setup
 
@@ -50,11 +57,17 @@ calibration_examples:
 docs_dir: "docs/design"
 ```
 
-**2. Create a `.env` file** in the same directory as `complementarity.yaml`:
+**2. Create a `.env` file** (optional) in the same directory as `complementarity.yaml`:
+
+```
+DEFAULT_PROVIDER=claude-code
+DEFAULT_MODEL=claude-sonnet-4-20250514
+```
+
+The default provider is `claude-code`, which routes through the Claude Code CLI using your Max/Pro subscription. No API key needed. If you want to use direct API calls, set the provider and key:
 
 ```
 DEFAULT_PROVIDER=anthropic
-DEFAULT_MODEL=claude-sonnet-4-20250514
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
@@ -122,6 +135,13 @@ Prints the fully assembled prompt to stdout. No API call, no file writes.
 ### Override provider or model
 
 ```bash
+# Use direct Anthropic API instead of Claude Code CLI
+python complementarity.py sync docs/design/governance.md \
+  --from Academic --to Business \
+  --provider anthropic --model claude-sonnet-4-20250514 \
+  --config /path/to/complementarity.yaml
+
+# Use OpenAI
 python complementarity.py sync docs/design/governance.md \
   --from Academic --to Business \
   --provider openai --model gpt-4o \
@@ -136,7 +156,7 @@ python complementarity.py sync docs/design/governance.md \
 | `--to` | (required) | Target perspective label |
 | `--section` | all sections | Sync only the `##` section matching this text |
 | `--dry-run` | false | Print prompt, don't call API |
-| `--provider` | from `.env` | `anthropic` or `openai` |
+| `--provider` | `claude-code` | `claude-code`, `anthropic`, or `openai` |
 | `--model` | from `.env` | Model identifier |
 | `--config` | `./complementarity.yaml` | Path to config file |
 | `--max-tokens` | 16384 | Max output tokens |
