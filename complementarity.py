@@ -10,6 +10,7 @@ All core functions are importable for use by future integrations
 """
 
 import argparse
+import difflib
 import os
 import re
 import sys
@@ -510,20 +511,25 @@ def write_updated_doc(original_path: str, sections: list[Section],
             dropped = find_dropped_passages(section.to_content, new_content)
 
             print(f"\n--- Section: {section.heading} ---")
+            old_lines = section.to_content.splitlines(keepends=True)
+            new_lines = new_content.splitlines(keepends=True)
+            diff = difflib.unified_diff(
+                old_lines, new_lines,
+                fromfile=f"existing ### {to_label}",
+                tofile=f"generated ### {to_label}",
+            )
+            diff_text = "".join(diff)
+            if diff_text:
+                print(diff_text)
+            else:
+                print("(no changes)")
+
             if dropped:
                 print(f"WARNING: {len(dropped)} passage(s) from existing "
-                      f"### {to_label} not found in generated output:")
-                for i, passage in enumerate(dropped, 1):
-                    preview = passage[:200]
-                    if len(passage) > 200:
-                        preview += "..."
-                    print(f"\n  [{i}] {preview}")
-                print()
-            else:
-                print(f"All existing ### {to_label} passages preserved.")
+                      f"content not found in generated output.")
 
             while True:
-                response = input("Overwrite? (y/n/all): ").strip().lower()
+                response = input("\nOverwrite? (y/n/all): ").strip().lower()
                 if response in ("y", "n", "all"):
                     break
                 print("Please enter y, n, or all.")
