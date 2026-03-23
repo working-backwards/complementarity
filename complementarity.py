@@ -345,8 +345,6 @@ def call_llm(prompt: str, provider: str, model: str, api_key: str, max_tokens: i
     if provider == "claude-code":
         import subprocess
         cmd = ["claude", "-p", "--output-format", "text"]
-        if model:
-            cmd.extend(["--model", model])
         result = subprocess.run(
             cmd,
             input=prompt,
