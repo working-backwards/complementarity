@@ -1,6 +1,6 @@
 [project]
 name = "complementarity"
-version = "0.1.1"
+version = "0.1.2"
 description = "Dual-perspective sync tool for design documents"
 requires-python = ">=3.10"
 dependencies = [

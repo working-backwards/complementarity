@@ -356,11 +356,21 @@ existing text.
 specific factual claim, preserve both and flag the disagreement:
    <!-- inconsistency: [what disagrees] -->
 
-7. For sections where a {to_label} equivalent should exist but you \
+7. SPECIFICATION GAPS: For each concept in the {from_label} source, \
+assess whether the {to_label} version provides a complete specification \
+in its own register — not just whether the concept is mentioned. \
+The intended reader of the {to_label} version expects: \
+{to_perspective['intended_reader'].strip()} \
+If a concept from the source is acknowledged in the {to_label} version \
+but not specified to the depth that reader would require, flag it:
+   <!-- specification-gap: [what is mentioned but not fully specified \
+in the {to_label} register] -->
+
+8. For sections where a {to_label} equivalent should exist but you \
 are uncertain how to express it, include your best attempt and mark:
    <!-- needs-review: [what is uncertain] -->
 
-8. Use the EXACT section heading text as provided above. Do not \
+9. Use the EXACT section heading text as provided above. Do not \
 rephrase, abbreviate, or reformat headings. The tool matches \
 your output to the source document by heading text.
 

@@ -139,11 +139,22 @@ Produce the {{to.label}} version for each section following these rules:
       specific factual claim, preserve both and flag the disagreement:
       <!-- inconsistency: [what disagrees] -->
 
-7. For sections where a {{to.label}} equivalent should exist but you
+7. SPECIFICATION GAPS: For each concept in the {{from.label}} source,
+   assess whether the {{to.label}} version provides a complete
+   specification in its own register — not just whether the concept is
+   mentioned. The intended reader of the {{to.label}} version expects:
+   {{to.intended_reader}}
+   If a concept from the source is acknowledged in the {{to.label}}
+   version but not specified to the depth that reader would require,
+   flag it:
+   <!-- specification-gap: [what is mentioned but not fully specified
+   in the {{to.label}} register] -->
+
+8. For sections where a {{to.label}} equivalent should exist but you
    are uncertain how to express it, include your best attempt and mark:
    <!-- needs-review: [what is uncertain] -->
 
-8. Use the EXACT section heading text as provided above. Do not
+9. Use the EXACT section heading text as provided above. Do not
    rephrase, abbreviate, or reformat headings. The tool matches
    your output to the source document by heading text.
 
@@ -157,5 +168,6 @@ section, using the exact section headings:
 ## Marker philosophy
 
 - **`<!-- inconsistency: ... -->`** — Factual disagreements between perspectives. These are bugs.
+- **`<!-- specification-gap: ... -->`** — A concept is mentioned but not specified to the depth the target register's reader would require. Works bidirectionally: for an academic reader, this might be a missing metric or equation; for a business reader, a missing concrete example or governance implication.
 - **`<!-- needs-review: ... -->`** — The LLM's own uncertainty about how to express something.
 - **No `<!-- disconnect: ... -->` markers.** Modeling disconnects should be self-evident from a sufficiently deep translation.
