@@ -33,7 +33,9 @@ pip install openai     # for --provider openai
 cp complementarity.yaml.example /path/to/your-project/complementarity.yaml
 ```
 
-Edit it to describe your project, perspectives, and calibration examples. See `complementarity.yaml.example` for the full format. The key fields:
+Edit it to describe your project and perspectives. The perspective labels can be anything — "Academic"/"Business", "Engineering"/"Product", "Legal"/"Technical", "Clinical"/"Operational" — whatever two registers you're working between. The `intended_reader` field is the most important: it defines what "complete" means in each register and drives the specification-gap detection.
+
+See `complementarity.yaml.example` for the full format. The key fields:
 
 ```yaml
 project:
@@ -43,21 +45,24 @@ project:
     - "Question that helps judge which design decisions matter most"
 
 perspectives:
-  - label: "Academic"
-    domain: "..."
-    intended_reader: "..."
-    analogy_source: "..."
-    notation_preference: "..."
-    notation_equations: "..."
-  - label: "Business"
+  - label: "Wave"          # any label — this becomes ### Wave in your docs
+    domain: "The knowledge domain this perspective operates in"
+    intended_reader: >
+      Describe the reader fully. What do they expect? What level of
+      specification satisfies them? This drives the LLM's completeness
+      standard and specification-gap detection.
+    analogy_source: "Where to draw analogies from (and where not to)"
+    notation_preference: "How to handle notation in this register"
+    notation_equations: "How to handle equations (include, omit, translate)"
+  - label: "Particle"      # the complementary perspective
     domain: "..."
     intended_reader: "..."
     # ...
 
-calibration_examples:
-  - perspective: "Academic"
+calibration_examples:       # optional — sample docs that show good output
+  - perspective: "Wave"
     path: "path/to/example_doc.md"
-  - perspective: "Business"
+  - perspective: "Particle"
     path: "path/to/example_doc.md"
 
 docs_dir: "docs/design"
@@ -79,16 +84,15 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 Add `.env` to your `.gitignore`.
 
-**3. Structure your documents** with perspective subsections under each `##` section:
+**3. Structure your documents** with perspective subsections under each `##` section, using your label names:
 
 ```markdown
 ## Purpose
 
-### Academic
-This note gives you enough of the model structure — latent state,
-observation model, belief dynamics...
+### Wave
+Content in the first register...
 
-### Business
+### Particle
 (empty — Complementarity will fill this in)
 ```
 
@@ -97,13 +101,13 @@ If a section already has `###` subsections, demote them to `####` under the pers
 ```markdown
 ## Policy outputs
 
-### Academic
+### Wave
 #### 1. ContinueStop
 Decision details...
 #### 2. SetExecAttention
 Attention details...
 
-### Business
+### Particle
 ```
 
 ## Usage
@@ -185,9 +189,10 @@ The tool auto-detects references to other `.md` files in the source document and
 
 ### Markers
 
-The LLM may include two types of markers:
+The LLM may include three types of markers:
 
 - `<!-- inconsistency: ... -->` — Factual disagreements between perspectives (e.g., "3 inputs" in one, "2 inputs" in the other). These are bugs to fix.
+- `<!-- specification-gap: ... -->` — A concept is mentioned but not specified to the depth the target register's reader would require. What counts as "sufficient depth" is driven by the `intended_reader` field in your config — different for each perspective.
 - `<!-- needs-review: ... -->` — The LLM is uncertain how to express something. Focus editing effort here.
 
 Modeling disconnects (the interesting findings) are not annotated — they should be self-evident from a sufficiently deep translation.
@@ -196,7 +201,6 @@ Modeling disconnects (the interesting findings) are not annotated — they shoul
 
 - **Resolve inconsistencies** — it surfaces them for your judgment
 - **Detect which sections changed** — it regenerates `--to` sections each run; use `git diff` to track changes
-- **Preserve manual edits to --to sections** — a sync overwrites targeted content (with confirmation)
 - **Batch-sync multiple files** — one file per command; wrap in a shell loop if needed
 
 ## Architecture
